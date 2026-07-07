@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Vacations{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header"><h2>Request time off</h2></div>
+  <form method="post" action="{{ url_for('vacations.new') }}" class="form-grid">
+    <div>
+      <label>Start date</label>
+      <input type="date" name="start_date" required>
+    </div>
+    <div>
+      <label>End date</label>
+      <input type="date" name="end_date" required>
+    </div>
+    <div>
+      <label>Type</label>
+      <select name="vac_type">
+        <option value="vacation">Vacation</option>
+        <option value="sick">Sick leave</option>
+        <option value="personal">Personal</option>
+      </select>
+    </div>
+    <div class="span-2">
+      <label>Reason (optional)</label>
+      <input type="text" name="reason" placeholder="Optional note for your manager">
+    </div>
+    <div class="span-2">
+      <button type="submit" class="btn btn-primary">Submit request</button>
+    </div>
+  </form>
+</div>
+
+{% if to_review %}
+<div class="card">
+  <div class="card-header"><h2>Requests to review</h2></div>
+  <ul class="task-list">
+    {% for v in to_review %}
+    <li>
+      <strong>{{ v.user.full_name }}</strong> — {{ v.start_date.strftime('%b %d, %Y') }} to
+      {{ v.end_date.strftime('%b %d, %Y') }} ({{ v.days }}d, {{ v.vac_type }})
+      {% if v.reason %}<br><span class="muted small">{{ v.reason }}</span>{% endif %}
+      <form method="post" action="{{ url_for('vacations.decide', vac_id=v.id) }}" class="inline-form">
+        <input type="text" name="manager_comment" placeholder="Optional comment" class="small-input">
+        <button type="submit" name="decision" value="approved" class="btn btn-sm btn-primary">Approve</button>
+        <button type="submit" name="decision" value="rejected" class="btn btn-sm btn-danger">Reject</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header"><h2>My requests</h2></div>
+  {% if my_requests %}
+  <table class="table">
+    <thead><tr><th>Dates</th><th>Type</th><th>Status</th><th>Manager note</th><th></th></tr></thead>
+    <tbody>
+      {% for v in my_requests %}
+      <tr>
+        <td>{{ v.start_date.strftime('%b %d') }} – {{ v.end_date.strftime('%b %d, %Y') }} ({{ v.days }}d)</td>
+        <td>{{ v.vac_type }}</td>
+        <td><span class="badge badge-{{ v.status }}">{{ v.status }}</span></td>
+        <td class="muted small">{{ v.manager_comment or '' }}</td>
+        <td>
+          {% if v.status == 'pending' %}
+          <form method="post" action="{{ url_for('vacations.delete', vac_id=v.id) }}"
+                onsubmit="return confirm('Delete this vacation request?')">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No requests yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
