@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Admin — Settings{% endblock %}
+{% block content %}
+
+<div class="card" style="max-width:420px">
+  <div class="card-header"><h2>Working hours</h2></div>
+  <p class="muted small">Used as the reference window on the daily hours report so you can see how
+  presence compares to expected working hours.</p>
+  <form method="post">
+    <label>Work day starts</label>
+    <input type="time" name="work_start" value="{{ settings.work_start.strftime('%H:%M') }}" required>
+    <label>Work day ends</label>
+    <input type="time" name="work_end" value="{{ settings.work_end.strftime('%H:%M') }}" required>
+    <label>Annual vacation days per employee</label>
+    <input type="number" name="annual_vacation_days" min="0" max="365" value="{{ settings.annual_vacation_days }}" required>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}
