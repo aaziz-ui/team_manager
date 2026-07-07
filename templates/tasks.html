@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+
+{% if employees %}
+<div class="card">
+  <div class="card-header"><h2>Assign a task</h2></div>
+  <form method="post" action="{{ url_for('tasks.new') }}" class="form-grid">
+    <div>
+      <label>Assign to</label>
+      <select name="assigned_to_id" required>
+        {% for e in employees %}
+        <option value="{{ e.id }}">{{ e.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Due date</label>
+      <input type="date" name="due_date" min="{{ today.isoformat() }}">
+    </div>
+    <div>
+      <label>Priority</label>
+      <select name="priority">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+    <div class="span-2">
+      <label>Title</label>
+      <input type="text" name="title" required placeholder="e.g. Finish cable schedule review">
+    </div>
+    <div class="span-2">
+      <label>Description</label>
+      <textarea name="description" rows="2" placeholder="Optional details"></textarea>
+    </div>
+    <div class="span-2">
+      <button type="submit" class="btn btn-primary">Assign task</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h2>My tasks</h2></div>
+    {% if my_tasks %}
+    <ul class="task-list">
+      {% for t in my_tasks %}
+      <li class="{{ 'overdue' if t.due_date and t.due_date < today and t.status != 'done' else '' }}">
+        <a href="{{ url_for('tasks.detail', task_id=t.id) }}">{{ t.title }}</a>
+        <span class="muted small">from {{ t.assigned_by.full_name }}</span>
+        {% if t.due_date %}<span class="muted small"> — due {{ t.due_date.strftime('%b %d') }}</span>{% endif %}
+        <span class="badge badge-{{ t.status }}">{{ t.status.replace('_',' ') }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Nothing assigned to you yet.</p>
+    {% endif %}
+  </div>
+
+  {% if assigned_by_me %}
+  <div class="card">
+    <div class="card-header"><h2>Tasks I assigned</h2></div>
+    <ul class="task-list">
+      {% for t in assigned_by_me %}
+      <li>
+        <a href="{{ url_for('tasks.detail', task_id=t.id) }}">{{ t.title }}</a>
+        <span class="muted small">to {{ t.assigned_to.full_name }}</span>
+        {% if t.due_date %}<span class="muted small"> — due {{ t.due_date.strftime('%b %d') }}</span>{% endif %}
+        <span class="badge badge-{{ t.status }}">{{ t.status.replace('_',' ') }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
