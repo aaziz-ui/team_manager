@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Team Manager{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<nav class="topnav">
+  <div class="brand">Team Manager</div>
+  <div class="nav-links">
+    <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+    <a href="{{ url_for('tasks.index') }}">Tasks</a>
+    <a href="{{ url_for('vacations.index') }}">Vacations</a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('admin.users') }}">Admin</a>
+    <a href="{{ url_for('admin.hours') }}">Hours</a>
+    <a href="{{ url_for('admin.settings') }}">Settings</a>
+    {% endif %}
+  </div>
+  <div class="nav-user">
+    <a href="{{ url_for('notifications.index') }}" class="bell-link" id="notif-bell" title="Notifications">
+      🔔{% if unread_notification_count %}<span class="bell-badge" id="notif-count">{{ unread_notification_count }}</span>{% endif %}
+    </a>
+    <span class="dot status-{{ current_user.display_status }}"></span>
+    {{ current_user.full_name }}
+    <a href="{{ url_for('auth.account') }}" class="muted">account</a>
+    <a href="{{ url_for('auth.logout') }}" class="muted">logout</a>
+  </div>
+</nav>
+{% endif %}
+
+<main class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+{% if current_user.is_authenticated %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endif %}
+</body>
+</html>
