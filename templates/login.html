@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Log in — Team Manager{% endblock %}
+{% block content %}
+<div class="auth-box">
+  <h1>Team Manager</h1>
+  <p class="muted">Sign in to continue</p>
+  <form method="post">
+    <label>Username</label>
+    <input type="text" name="username" required autofocus>
+    <label>Password</label>
+    <input type="password" name="password" required>
+    <button type="submit" class="btn btn-primary btn-block">Log in</button>
+  </form>
+</div>
+{% endblock %}
