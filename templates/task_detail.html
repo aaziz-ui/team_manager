@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h2>{{ task.title }}</h2>
+    <span class="badge badge-{{ task.status }}">{{ task.status.replace('_',' ') }}</span>
+  </div>
+  <p class="muted small">
+    Assigned to <strong>{{ task.assigned_to.full_name }}</strong>
+    by {{ task.assigned_by.full_name }}
+    {% if task.due_date %} &middot; due {{ task.due_date.strftime('%b %d, %Y') }}{% endif %}
+    &middot; priority: {{ task.priority }}
+  </p>
+  {% if task.description %}<p>{{ task.description }}</p>{% endif %}
+
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" style="width: {{ task.percent_complete }}%"></div></div>
+    <div class="progress-label">{{ task.percent_complete }}% complete</div>
+  </div>
+  <form method="post" action="{{ url_for('tasks.update_progress', task_id=task.id) }}" class="inline-form">
+    <label>Completion %:</label>
+    <input type="number" name="percent_complete" min="0" max="100" step="5" value="{{ task.percent_complete }}" class="small-input" style="width:80px">
+    <button type="submit" class="btn btn-sm">Save %</button>
+  </form>
+
+  <form method="post" action="{{ url_for('tasks.update_status', task_id=task.id) }}" class="inline-form">
+    <label>Update status:</label>
+    <select name="status">
+      <option value="pending" {% if task.status=='pending' %}selected{% endif %}>Pending</option>
+      <option value="in_progress" {% if task.status=='in_progress' %}selected{% endif %}>In progress</option>
+      <option value="done" {% if task.status=='done' %}selected{% endif %}>Done</option>
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">Update</button>
+  </form>
+
+  {% if current_user.role == 'admin' or task.assigned_by_id == current_user.id %}
+  <form method="post" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="inline-form"
+        onsubmit="return confirm('Delete this task and all its comments? This cannot be undone.')">
+    <button type="submit" class="btn btn-danger btn-sm">Delete task</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Comments</h2></div>
+  {% if task.comments %}
+  <ul class="comment-list">
+    {% for c in task.comments %}
+    <li>
+      <strong>{{ c.user.full_name }}</strong>
+      <span class="muted small">{{ c.created_at.strftime('%b %d, %H:%M') }}</span>
+      <p>{{ c.body }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">No comments yet.</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('tasks.add_comment', task_id=task.id) }}">
+    <textarea name="body" rows="2" placeholder="Ask a question or leave an update..." required></textarea>
+    <button type="submit" class="btn btn-primary btn-sm">Add comment</button>
+  </form>
+</div>
+
+<a href="{{ url_for('tasks.index') }}" class="muted">&larr; back to tasks</a>
+{% endblock %}
