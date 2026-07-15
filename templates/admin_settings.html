@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Admin — Settings{% endblock %}
+{% block content %}
+
+<div class="card" style="max-width:420px">
+  <div class="card-header"><h2>Working hours</h2></div>
+  <p class="muted small">Used as the reference window on the daily hours report so you can see how
+  presence compares to expected working hours. Times are in <strong>Pacific Time (PT)</strong> and are saved
+  permanently — they stay exactly as set until you come back and change them again.</p>
+  <form method="post">
+    <label>Work day starts (Pacific Time)</label>
+    <input type="time" name="work_start" value="{{ settings.work_start.strftime('%H:%M') }}" required>
+    <label>Work day ends (Pacific Time)</label>
+    <input type="time" name="work_end" value="{{ settings.work_end.strftime('%H:%M') }}" required>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+</div>
+
+<div class="card" style="max-width:420px">
+  <div class="card-header"><h2>Vacation days</h2></div>
+  <p class="muted small">Vacation day allotments are now set per employee — go to
+  <a href="{{ url_for('admin.users') }}">Admin → Users</a> and set "Vac. days/yr" on each person.</p>
+</div>
+{% endblock %}
