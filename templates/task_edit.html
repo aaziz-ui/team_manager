@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Edit task{% endblock %}
+{% block content %}
+
+<div class="card" style="max-width:600px">
+  <div class="card-header"><h2>Edit task</h2></div>
+  <form method="post" class="form-grid">
+    <div class="span-2">
+      <label>Title</label>
+      <input type="text" name="title" value="{{ task.title }}" required>
+    </div>
+    <div class="span-2">
+      <label>Description</label>
+      <textarea name="description" rows="3">{{ task.description or '' }}</textarea>
+    </div>
+    <div>
+      <label>Assigned to</label>
+      <select name="assigned_to_id" required>
+        {% for u in assignees %}
+        <option value="{{ u.id }}" {% if u.id == task.assigned_to_id %}selected{% endif %}>{{ u.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Due date</label>
+      <input type="date" name="due_date" value="{{ task.due_date.isoformat() if task.due_date else '' }}">
+    </div>
+    <div>
+      <label>Priority</label>
+      <select name="priority">
+        <option value="low" {% if task.priority=='low' %}selected{% endif %}>Low</option>
+        <option value="medium" {% if task.priority=='medium' %}selected{% endif %}>Medium</option>
+        <option value="high" {% if task.priority=='high' %}selected{% endif %}>High</option>
+      </select>
+    </div>
+    <div class="span-2"><button type="submit" class="btn btn-primary">Save changes</button></div>
+  </form>
+</div>
+<a href="{{ url_for('tasks.detail', task_id=task.id) }}" class="muted">&larr; back to task</a>
+{% endblock %}

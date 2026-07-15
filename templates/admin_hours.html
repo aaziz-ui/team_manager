@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Admin — Hours{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header"><h2>Daily availability hours</h2></div>
+  <div class="day-nav">
+    <a href="{{ url_for('admin.hours', date=prev_day.isoformat(), employee_id=employee_id) }}">&larr; prev day</a>
+    <input type="date" value="{{ day.isoformat() }}" max="{{ today.isoformat() }}"
+           data-employee-id="{{ employee_id or '' }}"
+           onchange="window.location.href='{{ url_for('admin.hours') }}?date='+this.value+(this.dataset.employeeId ? '&employee_id='+this.dataset.employeeId : '')"
+           style="width:auto;display:inline-block;margin:0 4px">
+    {% if day < today %}
+    <a href="{{ url_for('admin.hours', date=next_day.isoformat(), employee_id=employee_id) }}">next day &rarr;</a>
+    {% endif %}
+    <a href="{{ url_for('admin.hours', employee_id=employee_id) }}" class="muted">today</a>
+    <a href="{{ url_for('admin.hours_export_csv', date=day.isoformat(), employee_id=employee_id) }}" class="muted">export CSV</a>
+  </div>
+  <p class="muted small" style="margin-top:-6px">{{ day.strftime('%A, %b %d, %Y') }}</p>
+
+  <div class="inline-form" style="margin:10px 0">
+    <label style="margin:0">Search employee:</label>
+    <select onchange="window.location.href='{{ url_for('admin.hours') }}?date={{ day.isoformat() }}'+(this.value ? '&employee_id='+this.value : '')"
+            class="input-select">
+      <option value="">— All employees &amp; managers —</option>
+      {% for u in all_employees %}
+      <option value="{{ u.id }}" {% if employee_id == u.id %}selected{% endif %}>{{ u.full_name }} ({{ u.role }})</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <p class="muted small">
+    Company working hours: {{ settings.work_start.strftime('%H:%M') }} – {{ settings.work_end.strftime('%H:%M') }}
+    <strong>(Pacific Time)</strong> (<a href="{{ url_for('admin.settings') }}">change</a>).
+    Hours below are counted only <strong>within office hours</strong> — the counter starts when the office opens
+    and stops when it closes. <strong>"On-desk total"</strong> is Available + Idle + In a meeting combined (i.e.
+    time actually spent at work, excluding Away from desk and Offline). "Started"/"Ended" show actual first/last
+    activity in Pacific Time, even if that's outside office hours — anyone shown in red started after the office
+    officially opened.
+  </p>
+
+  {% set reset_target = rows[0].user.full_name if (employee_id and rows) else 'EVERY employee' %}
+  <form method="post" action="{{ url_for('admin.reset_hours') }}" style="margin-bottom:14px"
+        onsubmit="return confirm('Clear tracked hours for {{ reset_target }} on {{ day.strftime('%b %d, %Y') }}? This cannot be undone. Continue?')">
+    <input type="hidden" name="date" value="{{ day.isoformat() }}">
+    {% if employee_id %}<input type="hidden" name="employee_id" value="{{ employee_id }}">{% endif %}
+    <button type="submit" class="btn btn-danger btn-sm">
+      Reset hours for this day{{ ' (' + reset_target + ' only)' if employee_id else '' }}
+    </button>
+  </form>
+
+  <div style="overflow-x:auto">
+  <table class="table hours-table">
+    <thead>
+      <tr>
+        <th>Employee</th>
+        <th>Started (PT)</th>
+        <th>Ended (PT)</th>
+        <th>On-desk total</th>
+        <th>Available</th>
+        <th>Idle</th>
+        <th>Away from desk</th>
+        <th>In a meeting</th>
+        <th>Offline</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.user.full_name }}</td>
+        <td class="{{ 'hours-cell-late' if row.is_late else '' }}">
+          {{ row.started }}{% if row.is_late %} <span class="badge badge-rejected">late</span>{% endif %}
+        </td>
+        <td>{{ row.ended }}</td>
+        <td><strong>{{ row.on_desk }}</strong></td>
+        <td class="hours-cell-available">{{ row.formatted.available }}</td>
+        <td class="hours-cell-idle">{{ row.formatted.idle }}</td>
+        <td class="hours-cell-away_desk">{{ row.formatted.away_desk }}</td>
+        <td class="hours-cell-meeting">{{ row.formatted.meeting }}</td>
+        <td class="hours-cell-offline">{{ row.formatted.offline }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

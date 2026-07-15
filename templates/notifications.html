@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h2>Notifications</h2>
+    {% if grouped_items %}
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+      <button type="submit" class="btn btn-sm">Mark all as read</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if grouped_items %}
+  {% for day_label, notifs in grouped_items %}
+  <h3 class="day-group-header">{{ day_label }}</h3>
+  <ul class="task-list">
+    {% for n in notifs %}
+    <li class="{{ 'unread-notification' if not n.is_read else '' }}">
+      <a href="{{ url_for('notifications.open_notification', notif_id=n.id) }}">
+        <span class="badge badge-cat-{{ n.category }}">{{ n.category }}</span>
+        {{ n.message }}
+      </a>
+      <span class="muted small"> — {{ n.created_at.strftime('%H:%M') }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+  {% else %}
+  <p class="muted">No notifications yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
