@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+{% block title %}Employee Log{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('team') }} Employee monthly log</h2></div>
+  <form method="get" class="inline-form" style="flex-wrap:wrap">
+    <label class="muted small" style="margin:0">Employee:</label>
+    <select name="employee_id" onchange="this.form.submit()" style="width:auto;min-width:220px">
+      <option value="">— select an employee —</option>
+      {% for e in all_employees %}
+      <option value="{{ e.id }}" {% if e.id == employee_id %}selected{% endif %}>{{ e.full_name }}</option>
+      {% endfor %}
+    </select>
+    <label class="muted small" style="margin:0">Month:</label>
+    <input type="month" name="month" value="{{ month_value }}" onchange="this.form.submit()" style="width:auto">
+  </form>
+  <p class="muted small" style="margin-top:10px">
+    Company working hours: {{ settings.work_start.strftime('%H:%M') }} – {{ settings.work_end.strftime('%H:%M') }}
+    (Pacific Time). Figures below cover {{ month_start.strftime('%B %Y') }}, through
+    {{ (today if today < month_end else month_end).strftime('%b %d') }}.
+  </p>
+</div>
+
+{% if not employee_id %}
+<div class="card">
+  <div class="empty-state">{{ icons.icon('team', 32) }}<p>Pick an employee above to see their log.</p></div>
+</div>
+{% elif log %}
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('hours') }} {{ log.employee.full_name }} — {{ month_start.strftime('%B %Y') }}</h2></div>
+
+  <div class="log-grid">
+    <div class="log-stat">
+      <div class="log-stat-value {{ 'log-stat-warn' if log.total_late_minutes else '' }}">{{ log.total_late_minutes }} min</div>
+      <div class="log-stat-label">Late this month</div>
+      <div class="muted small">{{ log.late_days }} late day{{ 's' if log.late_days != 1 else '' }}{% if log.late_days %}, avg {{ log.avg_late_per_late_day }}m/day{% endif %}</div>
+    </div>
+
+    <div class="log-stat">
+      <div class="log-stat-value">{{ log.on_desk_month }}</div>
+      <div class="log-stat-label">On-desk hours this month</div>
+      <div class="muted small">avg {{ log.avg_on_desk_per_active_day }}/active day</div>
+    </div>
+
+    <div class="log-stat">
+      <div class="log-stat-value">{{ log.on_desk_week }}</div>
+      <div class="log-stat-label">On-desk hours this week</div>
+      <div class="muted small">since Mon, {{ log.week_start.strftime('%b %d') }}</div>
+    </div>
+
+    <div class="log-stat">
+      <div class="log-stat-value">{{ log.vac_days_month }}</div>
+      <div class="log-stat-label">Vacation days this month</div>
+      <div class="muted small">{{ log.vac_days_year }} day{{ 's' if log.vac_days_year != 1 else '' }} so far this year</div>
+    </div>
+
+    <div class="log-stat">
+      <div class="log-stat-value">{{ log.tasks_completed }}</div>
+      <div class="log-stat-label">Tasks completed this month</div>
+    </div>
+
+    <div class="log-stat">
+      <div class="log-stat-value {{ 'log-stat-warn' if log.no_activity_days else '' }}">{{ log.no_activity_days }}</div>
+      <div class="log-stat-label">Days with no tracked activity</div>
+      <div class="muted small">out of {{ log.active_days + log.no_activity_days }} days so far this month</div>
+    </div>
+  </div>
+
+  <p class="muted small" style="margin-top:16px">
+    "No tracked activity" includes weekends, days off, and approved vacation days, not just
+    unexplained absences — cross-check against the vacation figure above before reading into it.
+    <a href="{{ url_for('admin.hours') }}?employee_id={{ log.employee.id }}">View day-by-day hours for {{ log.employee.full_name }} →</a>
+  </p>
+</div>
+{% endif %}
+{% endblock %}
