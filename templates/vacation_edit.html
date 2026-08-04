@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Edit vacation request{% endblock %}
+{% block content %}
+
+<div class="card" style="max-width:500px">
+  <div class="card-header"><h2>Edit vacation — {{ vac.user.full_name }}</h2></div>
+  <form method="post" class="form-grid">
+    <div>
+      <label>Start date</label>
+      <input type="date" name="start_date" value="{{ vac.start_date.isoformat() }}" required>
+    </div>
+    <div>
+      <label>End date</label>
+      <input type="date" name="end_date" value="{{ vac.end_date.isoformat() }}" required>
+    </div>
+    <div>
+      <label>Type</label>
+      <select name="vac_type">
+        <option value="vacation" {% if vac.vac_type=='vacation' %}selected{% endif %}>Vacation</option>
+        <option value="sick" {% if vac.vac_type=='sick' %}selected{% endif %}>Sick leave</option>
+        <option value="personal" {% if vac.vac_type=='personal' %}selected{% endif %}>Personal</option>
+      </select>
+    </div>
+    <div>
+      <label>Status</label>
+      <select name="status">
+        <option value="pending" {% if vac.status=='pending' %}selected{% endif %}>Pending</option>
+        <option value="approved" {% if vac.status=='approved' %}selected{% endif %}>Approved</option>
+        <option value="rejected" {% if vac.status=='rejected' %}selected{% endif %}>Rejected</option>
+      </select>
+    </div>
+    <div class="span-2">
+      <label>Reason</label>
+      <input type="text" name="reason" value="{{ vac.reason or '' }}">
+    </div>
+    <div class="span-2">
+      <label>Manager comment</label>
+      <input type="text" name="manager_comment" value="{{ vac.manager_comment or '' }}">
+    </div>
+    <div class="span-2"><button type="submit" class="btn btn-primary">Save changes</button></div>
+  </form>
+</div>
+<a href="{{ url_for('vacations.index') }}" class="muted">&larr; back to vacations</a>
+{% endblock %}

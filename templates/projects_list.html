@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+
+{% if can_create %}
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('admin') }} New project</h2></div>
+  <form method="post" action="{{ url_for('projects.new') }}" class="form-grid">
+    <div class="span-2">
+      <label>Project name</label>
+      <input type="text" name="name" required placeholder="e.g. Sunbelt BESS - 50MW">
+    </div>
+    <div>
+      <label>Client</label>
+      <input type="text" name="client">
+    </div>
+    <div>
+      <label>Project manager</label>
+      <select name="manager_id">
+        <option value="">— unassigned —</option>
+        {% for m in all_possible_managers %}
+        <option value="{{ m.id }}">{{ m.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Phase</label>
+      <input type="text" name="phase" placeholder="e.g. IFC, Construction">
+    </div>
+    <div>
+      <label>Start date</label>
+      <input type="date" name="start_date">
+    </div>
+    <div>
+      <label>Target completion</label>
+      <input type="date" name="target_date">
+    </div>
+    <div class="span-2">
+      <label>Description</label>
+      <textarea name="description" rows="2"></textarea>
+    </div>
+    <div class="span-2"><button type="submit" class="btn btn-primary">Create project</button></div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('admin') }} Projects</h2></div>
+  {% if projects %}
+  <div class="project-card-grid">
+    {% for p in projects %}
+    <a href="{{ url_for('projects.detail', project_id=p.id) }}" class="project-card">
+      <div class="project-card-top">
+        <strong>{{ p.name }}</strong>
+        <span class="badge badge-project-{{ p.status }}">{{ p.status.replace('_',' ') }}</span>
+      </div>
+      {% if p.client %}<div class="muted small">{{ p.client }}</div>{% endif %}
+      <div class="progress-track" style="margin-top:8px"><div class="progress-fill" style="width:{{ p.computed_progress }}%"></div></div>
+      <div class="muted small" style="margin-top:4px">{{ p.computed_progress }}% complete
+        {% if p.days_remaining is not none %}
+          &middot; {{ p.days_remaining }} day{{ 's' if p.days_remaining != 1 else '' }} {{ 'remaining' if p.days_remaining >= 0 else 'overdue' }}
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">{{ icons.icon('inbox', 32) }}<p>No projects yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
