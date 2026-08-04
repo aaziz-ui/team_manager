@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+{% block title %}Daily Reports{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('hours') }} Browse &amp; submit reports by date</h2></div>
+  <div class="day-nav">
+    <a href="{{ url_for('reports.index', date=prev_date.isoformat()) }}">&larr; prev day</a>
+    <input type="date" value="{{ filter_date.isoformat() }}" max="{{ today.isoformat() }}"
+           onchange="window.location.href='{{ url_for('reports.index') }}?date='+this.value"
+           style="width:auto;display:inline-block;margin:0 4px">
+    {% if filter_date < today %}
+    <a href="{{ url_for('reports.index', date=next_date.isoformat()) }}">next day &rarr;</a>
+    {% endif %}
+    <a href="{{ url_for('reports.index') }}" class="muted">today</a>
+  </div>
+
+  <h3 style="font-size:14px;margin:16px 0 6px">
+    My report — {{ filter_date.strftime('%A, %b %d, %Y') }}
+    {% if own_report and own_report.is_read %}
+    <span class="badge badge-read" title="Read by {{ own_report.read_by.full_name }} on {{ own_report.read_at.strftime('%b %d, %H:%M') }}">
+      {{ icons.icon('admin', 12) }} Read by {{ own_report.read_by.full_name }}
+    </span>
+    {% endif %}
+  </h3>
+
+  {% if own_report and own_report.is_read %}
+  <p style="white-space:pre-line">{{ own_report.content }}</p>
+  <p class="muted small">Last updated {{ own_report.updated_at.strftime('%b %d, %H:%M') }} &middot;
+    locked - your manager has read this report. Ask them to mark it unread if you need to change it.</p>
+  {% else %}
+  <form method="post" action="{{ url_for('reports.submit') }}">
+    <input type="hidden" name="report_date" value="{{ filter_date.isoformat() }}">
+    <textarea name="content" rows="5" required
+      placeholder="e.g.&#10;- Reviewed Sunbelt BESS cable schedule Rev 2&#10;- Fixed arc flash FCT assumption in ETAP model&#10;- Call with vendor about submittal">{{ own_report.content if own_report else '' }}</textarea>
+    <button type="submit" class="btn btn-primary">{{ "Update report" if own_report else "Submit report" }} for {{ filter_date.strftime('%b %d') }}</button>
+  </form>
+  {% if own_report %}
+  <p class="muted small">Last updated {{ own_report.updated_at.strftime('%b %d, %H:%M') }}. You can edit any of your
+  own past reports any time, as long as your manager hasn't marked it read yet.</p>
+  {% endif %}
+  {% endif %}
+
+  {% if current_user.role in ('admin', 'manager') %}
+  <h3 style="font-size:14px;margin:20px 0 6px">
+    Team reports — {{ 'company-wide' if current_user.role == 'admin' else 'my team' }}
+  </h3>
+  {% if team_reports %}
+  <ul class="comment-list">
+    {% for r in team_reports %}
+    <li id="report-{{ r.id }}">
+      <strong>{{ r.user.full_name }}</strong>
+      <span class="muted small">updated {{ r.updated_at.strftime('%H:%M') }}</span>
+      {% if r.is_read %}
+      <span class="badge badge-read">{{ icons.icon('admin', 12) }} read</span>
+      {% else %}
+      <span class="badge badge-unread">unread</span>
+      {% endif %}
+      <span class="inline-form" style="display:inline-flex;gap:6px">
+        {% if r.is_read %}
+        <form method="post" action="{{ url_for('reports.mark_unread', report_id=r.id) }}">
+          <button type="submit" class="btn btn-sm">mark unread</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('reports.mark_read', report_id=r.id) }}">
+          <button type="submit" class="btn btn-sm btn-primary">mark read</button>
+        </form>
+        {% endif %}
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('reports.edit_report', report_id=r.id) }}" class="btn btn-sm">edit</a>
+        <form method="post" action="{{ url_for('reports.delete_report', report_id=r.id) }}"
+              onsubmit="return confirm('Delete this report?')">
+          <button type="submit" class="btn btn-sm btn-danger">delete</button>
+        </form>
+        {% endif %}
+      </span>
+      <p style="white-space:pre-line">{{ r.content }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">No reports submitted for this date yet.</p>
+  {% endif %}
+
+  {% if missing %}
+  <p class="muted small" style="margin-top:12px">
+    Not yet submitted for {{ filter_date.strftime('%b %d') }}:
+    {{ missing | map(attribute='full_name') | join(', ') }}
+  </p>
+  {% endif %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('reports') }} My recent reports</h2></div>
+  {% if my_reports %}
+  <ul class="comment-list">
+    {% for r in my_reports %}
+    <li>
+      <a href="{{ url_for('reports.index', date=r.report_date.isoformat()) }}"><strong>{{ r.report_date.strftime('%A, %b %d, %Y') }}</strong></a>
+      {% if r.is_read %}
+      <span class="badge badge-read">{{ icons.icon('admin', 12) }} read by {{ r.read_by.full_name }}</span>
+      {% endif %}
+      <p style="white-space:pre-line">{{ r.content }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty-state">{{ icons.icon('inbox', 32) }}<p>No reports submitted yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
