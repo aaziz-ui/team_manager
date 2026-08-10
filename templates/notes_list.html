@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+{% block title %}Notes{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('reports') }} New note</h2></div>
+  <form method="post" action="{{ url_for('notes.new') }}" class="form-grid">
+    <div class="span-2">
+      <label>Title</label>
+      <input type="text" name="title" placeholder="Untitled note">
+    </div>
+    <div class="span-2">
+      <label>Content</label>
+      <textarea name="content" rows="3" placeholder="Write whatever you want..."></textarea>
+    </div>
+    <div class="span-2"><button type="submit" class="btn btn-primary">Create note</button></div>
+  </form>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h2>{{ icons.icon('reports') }} My notes</h2></div>
+    {% if my_notes %}
+    <ul class="task-list">
+      {% for n in my_notes %}
+      <li>
+        <a href="{{ url_for('notes.edit', note_id=n.id) }}">{{ n.title }}</a>
+        {% if n.shares %}<span class="badge badge-cat-chat">shared with {{ n.shares|length }}</span>{% endif %}
+        <div class="muted small">updated {{ n.updated_at.strftime('%b %d, %H:%M') }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">{{ icons.icon('inbox', 32) }}<p>No notes yet.</p></div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h2>{{ icons.icon('team') }} Shared with me</h2></div>
+    {% if shared_with_me %}
+    <ul class="task-list">
+      {% for n in shared_with_me %}
+      <li>
+        <a href="{{ url_for('notes.edit', note_id=n.id) }}">{{ n.title }}</a>
+        <span class="muted small">by {{ n.owner.full_name }}</span>
+        <div class="muted small">updated {{ n.updated_at.strftime('%b %d, %H:%M') }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted small">Nobody has shared a note with you yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+{% block title %}News{% endblock %}
+{% block content %}
+
+{% if can_post %}
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('bell') }} Post company news</h2></div>
+  <form method="post" action="{{ url_for('news.new') }}" class="form-grid">
+    <div class="span-2">
+      <label>Title</label>
+      <input type="text" name="title" required placeholder="e.g. New client win: Sunbelt Energy 50MW BESS">
+    </div>
+    <div class="span-2">
+      <label>Details</label>
+      <textarea name="content" rows="4" placeholder="What's the news?"></textarea>
+    </div>
+    <div class="span-2"><button type="submit" class="btn btn-primary">Post news</button></div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header"><h2>{{ icons.icon('bell') }} Company news</h2></div>
+  {% if posts %}
+  <ul class="comment-list">
+    {% for p in posts %}
+    <li id="news-{{ p.id }}">
+      <strong>{{ p.title }}</strong>
+      <span class="muted small">
+        {{ p.author.full_name if p.author else 'former team member' }} &middot; {{ p.created_at.strftime('%b %d, %Y %H:%M') }}
+        {% if p.updated_at and p.updated_at != p.created_at %}(edited){% endif %}
+      </span>
+
+      {% if current_user.role == 'admin' or (p.author_id == current_user.id) %}
+      <span style="display:inline-flex;gap:4px">
+        <button type="button" class="chat-action-btn" onclick="document.getElementById('edit-news-{{ p.id }}').classList.toggle('hidden')">edit</button>
+        <form method="post" action="{{ url_for('news.delete', post_id=p.id) }}" style="display:inline"
+              onsubmit="return confirm('Delete this news post?')">
+          <button type="submit" class="chat-action-btn">delete</button>
+        </form>
+      </span>
+      {% endif %}
+
+      <p style="white-space:pre-line">{{ p.content }}</p>
+
+      {% if current_user.role == 'admin' or p.author_id == current_user.id %}
+      <form method="post" action="{{ url_for('news.edit', post_id=p.id) }}" id="edit-news-{{ p.id }}" class="hidden form-grid" style="margin-top:8px">
+        <div class="span-2"><input type="text" name="title" value="{{ p.title }}" required></div>
+        <div class="span-2"><textarea name="content" rows="3">{{ p.content }}</textarea></div>
+        <div class="span-2"><button type="submit" class="btn btn-sm">save</button></div>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty-state">{{ icons.icon('inbox', 32) }}<p>No news posted yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
